@@ -1,7 +1,6 @@
 <template>
 <div>
-	<h1>{{room}}</h1>
-	<md-card v-for="(item, index) in questions">
+	<md-card v-for="(item, index) in questions" v-show="!waiting">
 		<md-card-header>
 			<md-card-header-text>
 				<div class="md-title">Question {{index + 1}}</div>
@@ -13,6 +12,22 @@
 				<label>Answer</label>
 				<md-input type="text" v-model="item.Answer"></md-input>
 			</md-input-container>
+		</md-card-actions>
+	</md-card>
+	<md-card v-show="waiting">
+		<md-card-header>
+			<md-card-header-text>
+				<div class="md-title">Good Job, You Answered First</div>
+				<div class="md-title">Waiting on Your Partner's Answers</div>
+			</md-card-header-text>
+		</md-card-header>
+		<div style="text-align:center;">
+			<md-spinner :md-size="150" md-indeterminate style="display:inline-block"></md-spinner>
+		</div>
+		<md-card-actions>
+			<router-link :to="{ name: 'Home' }">
+				<md-button>Cancel</md-button>
+			</router-link>
 		</md-card-actions>
 	</md-card>
 	<div v-on:click="sendAnswers()">
@@ -30,7 +45,8 @@ export default {
 	data() {
 		return {
 			questions: null,
-			answers: []
+			answers: [],
+			waiting: false
 		}
 	},
 	created: function() {
@@ -48,6 +64,7 @@ export default {
   methods: {
     sendAnswers: function(){
       this.$socket.emit('sendAnswers', this.questions);
+			this.waiting = true;
     }
   }
 }

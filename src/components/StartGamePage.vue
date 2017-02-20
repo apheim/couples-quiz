@@ -1,6 +1,6 @@
 <template>
 <div>
-	<md-card>
+	<md-card v-show="!waiting">
 		<md-card-header>
 			<md-card-header-text>
 				<div class="md-title">Congrats! You Connected. How Sweet.</div>
@@ -15,6 +15,22 @@
 		</md-card-actions>
     <div v-on:click="sendName()"><md-button class="md-raised md-primary">Send</md-button></div>
 	</md-card>
+	<md-card v-show="waiting">
+		<md-card-header>
+			<md-card-header-text>
+				<div class="md-title">Looks Like You're The Fast One</div>
+				<div class="md-title">Waiting on Your Partner's Name</div>
+			</md-card-header-text>
+		</md-card-header>
+		<div style="text-align:center;">
+			<md-spinner :md-size="150" md-indeterminate style="display:inline-block"></md-spinner>
+		</div>
+		<md-card-actions>
+			<router-link :to="{ name: 'Home' }">
+				<md-button>Cancel</md-button>
+			</router-link>
+		</md-card-actions>
+	</md-card>
 </div>
 </template>
 
@@ -25,13 +41,14 @@ export default {
 	name: 'hello',
 	data() {
 		return {
-        name : null
+        name : null,
+				waiting: false
 		}
 	},
   methods: {
     sendName: function(){
-      console.log("sending name");
         this.$socket.emit('sendName', this.name);
+				this.waiting = true;
     }
   }
 }

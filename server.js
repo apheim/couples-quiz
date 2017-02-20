@@ -1,15 +1,20 @@
 var express = require('express');
-var app = express();
-var server = require('http').createServer(app);
-var io = require('socket.io')(server);
+var app = require('./build/dev-server.js');
+var io = require('socket.io')(app.server);
+
+// var app = express();
+// var server = require('http').createServer(app);
+// var io = require('socket.io')(server);
+// var port = process.env.PORT || 5000;
+// /
+// server.listen(port);
+
 var bodyParser = require('body-parser')
 app.use( bodyParser.json() );
 
 app.use(express.static('dist'))
 
-var port = process.env.PORT || 5000;
 
-server.listen(port);
 
 let rooms = [];
 
