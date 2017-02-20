@@ -9,7 +9,9 @@ var io = require('socket.io')(server);
 var bodyParser = require('body-parser')
 app.use( bodyParser.json() );
 
-app.listen(3000);
+app.use(serveStatic(path.join(__dirname, ‘dist’)));
+var port = process.env.PORT || 5000;
+app.listen(port);
 
 let rooms = [];
 
@@ -53,8 +55,6 @@ app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   next();
 });
-
-app.use(express.static('dist'))
 
 app.get('/getRoomCode', function (req, res) {
   let code = Math.round((Math.pow(36, 6 + 1) - Math.random() * Math.pow(36, 6))).toString(36).slice(1);
