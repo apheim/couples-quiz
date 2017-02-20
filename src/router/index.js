@@ -12,7 +12,7 @@ require('vue-material/dist/vue-material.css')
 
 Vue.use(VueMaterial)
 Vue.use(Router)
-Vue.use(VueSocketio, window.location.orgin);
+Vue.use(VueSocketio, window.location.origin);
 
 export default new Router({
   routes: [
