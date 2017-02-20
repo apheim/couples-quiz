@@ -9,8 +9,10 @@ var io = require('socket.io')(server);
 var bodyParser = require('body-parser')
 app.use( bodyParser.json() );
 
-app.use(serveStatic(path.join(__dirname, ‘dist’)));
+app.use(express.static('dist'))
+
 var port = process.env.PORT || 5000;
+console.log(port);
 app.listen(port);
 
 let rooms = [];
