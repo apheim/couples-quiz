@@ -1,0 +1,53 @@
+<template>
+<div>
+	<md-card v-for="(question, index) in room.questions">
+		<md-card-header>
+			<md-card-header-text>
+				<div class="md-title">Question {{index + 1}}</div>
+				<div class="md-title">{{question.Question}}</div>
+			</md-card-header-text>
+			<md-card-header-text v-for="(player, index) in room.players">
+				<div class="md-title">{{player.name}}</div>
+				<div class="md-title">{{getAnswer(player, question.Id)}}</div>
+			</md-card-header-text>
+		</md-card-header>
+	</md-card>
+
+</div>
+</template>
+
+<script>
+import Axios from 'axios'
+
+export default {
+	name: 'Questions PAge',
+	props: ['roomCode'],
+	data() {
+		return {
+			room: {},
+			answers: []
+		}
+	},
+	created: function() {
+		var me = this
+		Axios.get('getRoom', {
+				params: {
+					room: this.roomCode
+				}
+			})
+			.then(function(resp) {
+				me.room = resp.data;
+			})
+	},
+	methods:{
+		getAnswer: function(player, questionId){
+			return player.answers.filter( a => a.QuestionId == questionId)[0].Answer;
+		}
+	}
+}
+</script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped>
+
+</style>
