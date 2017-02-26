@@ -1,55 +1,29 @@
- var express = require('express');
- // var app = require('./build/dev-server.js');
- // var io = require('socket.io')(app.server);
+var express = require('express');
+var questions = require("./data/questions");
+var Player = require("./models/player");
+var app, server, port;
 
-var app = express();
-var server = require('http').createServer(app);
+var env = process.env.NODE_ENV || 'development';
+if(env == "development"){
+  console.log("running dev");
+  app = require('./build/dev-server.js');
+  server = app.server;
+} else {
+  console.log("running prod");
+  app = express();
+  server = require('http').createServer(app);
+  port = process.env.PORT || 5000;
+  server.listen(port);
+}
+
 var io = require('socket.io')(server);
-var port = process.env.PORT || 5000;
 
-server.listen(port);
-
-var questions = [
-	"What is [PLAYER]{'s}(your) favorite band?",
-	"What is [PLAYER]{'s}(your) favorite movie?",
-	"What does the most around the house?",
-	"Describe [PLAYER](yourself) on your first date?",
-	"How did you meet?",
-	"When and where did you first kiss?",
-	"My spouse’s first kiss made me think ________________.",
-	"What color did [PLAYER](you) wear on your first date?",
-	"What was your worst date with your spouse?",
-	"What would be [PLAYER]{'s}(your) ideal date?",
-	"Where did you go on your first date?",
-	"Where did you go on your most recent date with your spouse?",
-	"Whom did [PLAYER](you) last date before you met?",
-	"How long had you been dating when you became engaged?",
-  "How long after you were engaged did you get married?",
-	"How many guests do you invited to the wedding?",
-  "Which of you had more guests at the wedding?",
-	"What adjective best describes [PLAYER](yourself) on your wedding day?",
-	"What did guests eat at the reception?",
-	"What flavor of cake did you have at your wedding?",
-	"What is the best thing that happened on your wedding day?",
-	"Who decided on the wedding song for walking down the aisle?",
-	"What is the worst thing that happened on your wedding day?"
-]
 var bodyParser = require('body-parser')
 app.use(bodyParser.json());
 
 app.use(express.static('dist'))
 
-
-
 let rooms = [];
-
-function Player(id, name) {
-	return {
-		id: id,
-		name: name,
-		answers: []
-	}
-};
 
 function getRoom(code) {
 	code = code.toLowerCase();
@@ -125,6 +99,7 @@ function getNonPlayerSpecificQuestion(question) {
 	return returnedQuestion;
 }
 
+//enable cors
 app.use(function(req, res, next) {
 	res.header("Access-Control-Allow-Origin", "*");
 	res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
