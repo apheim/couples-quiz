@@ -18,9 +18,7 @@
 				<md-button>Cancel</md-button>
 			</router-link>
 		</md-card-actions>
-
 	</md-card>
-
 </div>
 </template>
 

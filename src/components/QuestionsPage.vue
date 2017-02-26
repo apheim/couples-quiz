@@ -1,20 +1,28 @@
 <template>
 <div>
-	<md-card v-for="(item, index) in questions" v-show="!waiting">
-		<md-card-header>
-			<md-card-header-text>
-				<div class="md-title">Question {{index + 1}}</div>
-				<div class="md-title">{{item.Question}}</div>
-			</md-card-header-text>
-		</md-card-header>
-		<md-card-actions>
-			<md-input-container>
-				<label>Answer</label>
-				<md-input type="text" v-model="item.Answer"></md-input>
-			</md-input-container>
-		</md-card-actions>
-	</md-card>
-	<md-card v-show="waiting">
+	<transition name="custom-classes-transition" enter-active-class="animated fadeInRight" mode="out-in"  leave-active-class="animated fadeOutLeft"  >
+		<md-card v-if="!waiting" v-bind:key="currentIndex">
+			<md-card-header>
+				<md-card-header-text>
+					<div class="md-title">Question {{currentIndex + 1}}</div>
+					<div class="md-title">{{currentQuestion.Question}}</div>
+				</md-card-header-text>
+			</md-card-header>
+			<md-card-actions>
+				<md-input-container>
+					<label>Answer</label>
+					<md-input type="text" @keyup.enter.native="nextQuestion()" v-model="currentQuestion.Answer"></md-input>
+				</md-input-container>
+			</md-card-actions>
+			<md-card-actions>
+				<div @click="nextQuestion()">
+					<md-button>Next</md-button>
+				</div>
+			</md-card-actions>
+		</md-card>
+	</transition>
+	<transition name="custom-classes-transition" enter-active-class="animated fadeInRight">
+	<md-card v-if="waiting" transition="fadeLeft">
 		<md-card-header>
 			<md-card-header-text>
 				<div class="md-title">Good Job, You Answered First</div>
@@ -30,9 +38,7 @@
 			</router-link>
 		</md-card-actions>
 	</md-card>
-	<div v-on:click="sendAnswers()">
-		<md-button class="md-raised md-primary">Send</md-button>
-	</div>
+	</transition
 </div>
 </template>
 
@@ -41,12 +47,12 @@ import Axios from 'axios'
 
 export default {
 	name: 'hello',
-	props: ['room'],
+	props: ['room', 'playerId'],
 	data() {
 		return {
-			questions: null,
-			answers: [],
-			waiting: false
+			questions: [],
+			waiting: false,
+			currentIndex: 0
 		}
 	},
 	created: function() {
@@ -54,19 +60,31 @@ export default {
 		console.log(this.room);
 		Axios.get('getQuestions', {
 				params: {
-					room: this.room
+					room: this.room,
+					player: this.playerId
 				}
 			})
 			.then(function(resp) {
 				me.questions = resp.data;
 			})
 	},
-  methods: {
-    sendAnswers: function(){
-      this.$socket.emit('sendAnswers', this.questions);
+	methods: {
+		sendAnswers: function() {
+			console.log(this.questions);
+			this.$socket.emit('sendAnswers', this.questions);
 			this.waiting = true;
-    }
-  }
+		},
+		nextQuestion: function() {
+			if (++this.currentIndex == this.questions.length)
+				this.sendAnswers();
+		}
+	},
+	computed: {
+		currentQuestion() {
+			if (this.questions.length == 0 || this.currentIndex >= this.questions.length) return {};
+			return this.questions[this.currentIndex];
+		}
+	}
 }
 </script>
 

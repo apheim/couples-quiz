@@ -1,16 +1,39 @@
-var express = require('express');
-var app = require('./build/dev-server.js');
-var io = require('socket.io')(app.server);
+// var express = require('express');
+// var app = require('./build/dev-server.js');
+// var io = require('socket.io')(app.server);
 
-// var app = express();
-// var server = require('http').createServer(app);
-// var io = require('socket.io')(server);
-// var port = process.env.PORT || 5000;
-// /
-// server.listen(port);
+var app = express();
+var server = require('http').createServer(app);
+var io = require('socket.io')(server);
+var port = process.env.PORT || 5000;
 
+server.listen(port);
+
+var questions = [
+	"What is [PLAYER]{'s}(your) favorite band?",
+	"What is [PLAYER]{'s}(your) favorite movie?",
+	"What does the most around the house?",
+	"Describe [PLAYER](yourself) on your first date?",
+	"How did you meet?",
+	"When and where did you first kiss?",
+	"My spouse’s first kiss made me think ________________.",
+	"What color did [PLAYER](you) wear on your first date?",
+	"What was your worst date with your spouse?",
+	"What would be [PLAYER]{'s}(your) ideal date?",
+	"Where did you go on your first date?",
+	"Where did you go on your most recent date with your spouse?",
+	"Whom did [PLAYER](you) last date before you met?",
+	"How long had you been dating when you became engaged? How long after you were engaged did you get married?",
+	"How many guests do you invited to the wedding? Which of you had more guests at the wedding?",
+	"What adjective best describes [PLAYER](yourself) on your wedding day?",
+	"What did guests eat at the reception?",
+	"What flavor of cake did you have at your wedding? How many tiers did the cake have?",
+	"What is the best thing that happened on your wedding day?",
+	"Who decided on the wedding song for walking down the aisle?",
+	"What is the worst thing that happened on your wedding day?"
+]
 var bodyParser = require('body-parser')
-app.use( bodyParser.json() );
+app.use(bodyParser.json());
 
 app.use(express.static('dist'))
 
@@ -18,137 +41,202 @@ app.use(express.static('dist'))
 
 let rooms = [];
 
-function Player(name){
-  return {
-    name: name,
-    answers:[]
+function Player(id, name) {
+	return {
+		id: id,
+		name: name,
+		answers: []
+	}
+};
+
+function getRoom(code) {
+	code = code.toLowerCase();
+
+	let roomsFound = rooms.filter((r) => r.code.toLowerCase() == code);
+
+	if (roomsFound.length > 0)
+		return roomsFound[0];
+	else
+		return null;
+};
+
+function getRandomQuestions(numberOfQuestions){
+  let questionsToAsk = [];
+  let questionsAlreadyAdded = [];
+
+  for(var i = 0; i < numberOfQuestions;){
+    var index = Math.floor(Math.random() * questions.length);
+    if(questionsAlreadyAdded.indexOf(index) == -1){
+      questionsAlreadyAdded.push(index);
+      questionsToAsk.push(questions[index]);
+      i++;
+    }
   }
+
+  return questionsToAsk;
+}
+
+function fillInRoomQuestions(room) {
+  let numberOfQuestions = 5;
+  let questionsToAsk = getRandomQuestions(numberOfQuestions);
+  room.questions = [];
+
+	questionsToAsk.forEach(function(question, index) {
+		var playerId = Math.floor(Math.random() * 2);
+		let player = room.players[playerId];
+		var questionPlayer1 = null;
+		var questionPlayer2 = null;
+
+		if (playerId == 1) {
+			questionPlayer1 = getNonPlayerSpecificQuestion(question);
+			questionPlayer2 = getPlayerSpecificQuestion(question, player.name);
+		} else {
+			questionPlayer2 = getNonPlayerSpecificQuestion(question);
+			questionPlayer1 = getPlayerSpecificQuestion(question, player.name);
+		}
+		var questionDisplay = playerId == 0 ? questionPlayer1 : questionPlayer2;
+
+		room.questions.push({
+			Id: index + 1,
+			Player1: questionPlayer1,
+			Player2: questionPlayer2,
+			Display: questionDisplay
+		});
+	});
 };
 
-function getRoom(code){
-  code = code.toLowerCase();
+function getPlayerSpecificQuestion(question, name) {
+	var returnedQuestion =  question.replace("[PLAYER]", name);
+	returnedQuestion = returnedQuestion.replace("{", "");
+	returnedQuestion = returnedQuestion.replace("}", "");
+	returnedQuestion = returnedQuestion.replace(/\(([^\)]+)\)/g, "");
 
-  let roomsFound = rooms.filter((r) => r.code.toLowerCase() == code);
+	return returnedQuestion;
+}
 
-  if(roomsFound.length > 0)
-    return roomsFound[0];
-  else
-    return null;
-};
+function getNonPlayerSpecificQuestion(question) {
+	var returnedQuestion = question.replace("[PLAYER]", "");
+	returnedQuestion = returnedQuestion.replace("(", "");
+	returnedQuestion = returnedQuestion.replace(")", "");
+	returnedQuestion = returnedQuestion.replace("{'s}", "");
 
-function fillInRoomQuestions(room){
-    room.questions = [
-      {
-        Id: 1,
-        Question: "How Many Dates until you Kissed?"
-      },
-      {
-        Id: 2,
-        Question: "Who does the most around the house?"
-      },
-      {
-        Id: 3,
-        Question: "Who says I love you more?"
-      }
-    ]
-};
+	return returnedQuestion;
+}
 
 app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
+	res.header("Access-Control-Allow-Origin", "*");
+	res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+	next();
 });
 
-app.get('/getRoomCode', function (req, res) {
-  let code = Math.round((Math.pow(36, 6 + 1) - Math.random() * Math.pow(36, 6))).toString(36).slice(1);
-  code = code.toLowerCase();
+app.get('/getRoomCode', function(req, res) {
+	let code = Math.round((Math.pow(36, 6 + 1) - Math.random() * Math.pow(36, 6))).toString(36).slice(1);
+	code = code.toLowerCase();
 
-  rooms.push({
-    code: code,
-    numberOfPlayers: 0,
-    players: [
+	rooms.push({
+		code: code,
+		numberOfPlayers: 0,
+		players: [
 
-    ]
-  });
-  res.send(code);
+		]
+	});
+	res.send(code);
 });
 
-app.get('/getQuestions', function (req, res) {
-  let code = req.query.room;
-  let room = getRoom(code);
-
-  res.send(room.questions);
+app.get('/getQuestions', function(req, res) {
+	let code = req.query.room;
+	let player = req.query.player;
+	let room = getRoom(code);
+	var questions = [];
+	room.questions.forEach(function(question) {
+		console.log(question);
+		console.log(player);
+		questions.push({
+			Id: question.Id,
+			Question: question["Player" + player],
+			Answer: null
+		});
+	});
+	res.send(questions);
 });
 
-app.get('/getRoom', function (req, res) {
-  let code = req.query.room;
-  let room = getRoom(code);
+app.get('/getRoom', function(req, res) {
+	let code = req.query.room;
+	let room = getRoom(code);
 
-  res.send(room);
+	console.log(room);
+	console.log(room.players[0]);
+
+	res.send(room);
 });
 
-app.post('/joinRoom', function (req, res) {
-  let code = req.body.code;
-  let room = getRoom(code);
+app.post('/joinRoom', function(req, res) {
+	let code = req.body.code;
+	let room = getRoom(code);
 
-  if(room && room.numberOfPlayers < 2)
-    res.send(true);
-  else
-    res.send(false);
+	if (room && room.numberOfPlayers < 2)
+		res.send(true);
+	else
+		res.send(false);
 });
 
-app.get('/', function (req, res) {
-  res.sendFile(__dirname + '/index.html');
+app.get('/', function(req, res) {
+	res.sendFile(__dirname + '/index.html');
 });
 
-io.on('connection', function (socket) {
-  console.log("connected");
-  socket.on('joinRoom', function (code) {
-    code = code.toLowerCase();
-    console.log(code);
-    let room = getRoom(code);
+io.on('connection', function(socket) {
+	console.log("connected");
+	socket.on('joinRoom', function(code) {
+		code = code.toLowerCase();
+		console.log(code);
+		let room = getRoom(code);
 
-    if(room && room.numberOfPlayers < 2){
-      room.numberOfPlayers++;
-      socket.join(room.code);
-      socket.roomCode = room.code;
-      console.log('Player has Joined Room');
-      if(room.numberOfPlayers== 2){
-        console.log("Starting Game");
-        io.sockets.in(code).emit('startGame');
-      }
-    }
-  });
+		if (room && room.numberOfPlayers < 2) {
+			room.numberOfPlayers++;
+			socket.join(room.code);
+			socket.roomCode = room.code;
+			console.log('Player has Joined Room');
+			if (room.numberOfPlayers == 2) {
+				console.log("Starting Game");
+				io.sockets.in(code).emit('startGame');
+			}
+		}
+	});
 
-  socket.on('sendName', function (name) {
-    let room = getRoom(socket.roomCode);
-    if(room.players.length < 2){
-      let player = Player(name);
-      room.players.push(player);
-      socket.player = player;
-      if(room.players.length == 2){
-        fillInRoomQuestions(room);
-        io.sockets.in(socket.roomCode).emit('goToQuestions', socket.roomCode);
-      }
-    }
-  });
+	socket.on('sendName', function(name) {
+		let room = getRoom(socket.roomCode);
+		if (room.players.length < 2) {
+			var playerId = room.players.length + 1;
+			let player = Player(playerId, name);
+			room.players.push(player);
+			socket.player = player;
+			socket.emit("sendPlayerId", playerId);
+			if (room.players.length == 2) {
+				fillInRoomQuestions(room);
+				io.sockets.in(socket.roomCode).emit('goToQuestions', socket.roomCode);
+			}
+		}
+	});
 
-  socket.on('sendAnswers', function (questions) {
-      console.log(questions);
-      let room = getRoom(socket.roomCode);
-      questions.forEach( q => socket.player.answers.push({QuestionId: q.Id, Answer: q.Answer}));
+	socket.on('sendAnswers', function(questions) {
+		console.log(questions);
+		let room = getRoom(socket.roomCode);
+		questions.forEach(q => socket.player.answers.push({
+			QuestionId: q.Id,
+			Answer: q.Answer
+		}));
 
-      console.log(socket.player);
-      let allAnswered = true;
-      console.log(room.players);
+		console.log(socket.player);
+		let allAnswered = true;
+		console.log(room.players);
 
-      room.players.forEach( p => {
-        if(p.answers.length == 0)
-          allAnswered = false;
-      });
+		room.players.forEach(p => {
+			if (p.answers.length == 0)
+				allAnswered = false;
+		});
 
-      console.log(allAnswered);
-      if(allAnswered)
-        io.sockets.in(socket.roomCode).emit('goToAnswers', socket.roomCode);
-  })
+		console.log(allAnswered);
+		if (allAnswered)
+			io.sockets.in(socket.roomCode).emit('goToAnswers', socket.roomCode);
+	})
 });

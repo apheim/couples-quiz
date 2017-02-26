@@ -10,6 +10,7 @@ import VueSocketio from 'vue-socket.io';
 
 require('vue-material/dist/vue-material.css')
 
+
 Vue.use(VueMaterial)
 Vue.use(Router)
 Vue.use(VueSocketio, window.location.origin);

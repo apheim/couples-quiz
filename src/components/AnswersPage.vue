@@ -4,15 +4,20 @@
 		<md-card-header>
 			<md-card-header-text>
 				<div class="md-title">Question {{index + 1}}</div>
-				<div class="md-title">{{question.Question}}</div>
+				<div class="md-title">{{question.Display}}</div>
 			</md-card-header-text>
-			<md-card-header-text v-for="(player, index) in room.players">
-				<div class="md-title">{{player.name}}</div>
-				<div class="md-title">{{getAnswer(player, question.Id)}}</div>
-			</md-card-header-text>
-		</md-card-header>
-	</md-card>
 
+		</md-card-header>
+		<md-card-content>
+		<md-card v-for="(player, index) in room.players">
+			<div class="md-title">{{player.name}}</div>
+			<div >{{getAnswer(player, question.Id)}}</div>
+		</md-card>
+	</md-card-content>
+	</md-card>
+	<router-link :to="{ name: 'Home' }">
+		<md-button class="md-raised md-primary">To Main Menu</md-button>
+	</router-link>
 </div>
 </template>
 
@@ -41,6 +46,7 @@ export default {
 	},
 	methods:{
 		getAnswer: function(player, questionId){
+			console.log(player.answers);
 			return player.answers.filter( a => a.QuestionId == questionId)[0].Answer;
 		}
 	}
