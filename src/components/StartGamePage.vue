@@ -10,7 +10,7 @@
 		<md-card-actions>
 			<md-input-container>
 				<label>Name</label>
-				<md-input type="text" @keyup.enter.native="sendName()" v-model="name"></md-input>
+				<md-input type="text" @keyup.enter.native="sendName()" v-model="name" id="name"></md-input>
 			</md-input-container>
 		</md-card-actions>
 		<div @click="sendName()">
@@ -54,6 +54,11 @@ export default {
 			this.$socket.emit('sendName', this.name);
 			this.waiting = true;
 		}
+	},
+	mounted: function(){
+		setTimeout(function() {
+			document.getElementById("name").focus();
+		}, 1000);
 	}
 }
 </script>

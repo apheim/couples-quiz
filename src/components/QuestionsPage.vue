@@ -11,7 +11,7 @@
 			<md-card-actions>
 				<md-input-container>
 					<label>Answer</label>
-					<md-input type="text" @keyup.enter.native="nextQuestion()" v-model="currentQuestion.Answer"></md-input>
+					<md-input id="answer" type="text" @keyup.enter.native="nextQuestion()" v-model="currentQuestion.Answer"></md-input>
 				</md-input-container>
 			</md-card-actions>
 			<md-card-actions>
@@ -56,8 +56,7 @@ export default {
 		}
 	},
 	created: function() {
-		var me = this
-		console.log(this.room);
+		var me = this;
 		Axios.get('getQuestions', {
 				params: {
 					room: this.room,
@@ -70,13 +69,16 @@ export default {
 	},
 	methods: {
 		sendAnswers: function() {
-			console.log(this.questions);
 			this.$socket.emit('sendAnswers', this.questions);
 			this.waiting = true;
 		},
 		nextQuestion: function() {
 			if (++this.currentIndex == this.questions.length)
 				this.sendAnswers();
+
+			setTimeout(function(){
+				document.getElementById("answer").focus();
+			},2000);
 		}
 	},
 	computed: {

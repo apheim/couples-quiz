@@ -1,6 +1,6 @@
  var express = require('express');
-// var app = require('./build/dev-server.js');
-// var io = require('socket.io')(app.server);
+ // var app = require('./build/dev-server.js');
+ // var io = require('socket.io')(app.server);
 
 var app = express();
 var server = require('http').createServer(app);
@@ -23,11 +23,13 @@ var questions = [
 	"Where did you go on your first date?",
 	"Where did you go on your most recent date with your spouse?",
 	"Whom did [PLAYER](you) last date before you met?",
-	"How long had you been dating when you became engaged? How long after you were engaged did you get married?",
-	"How many guests do you invited to the wedding? Which of you had more guests at the wedding?",
+	"How long had you been dating when you became engaged?",
+  "How long after you were engaged did you get married?",
+	"How many guests do you invited to the wedding?",
+  "Which of you had more guests at the wedding?",
 	"What adjective best describes [PLAYER](yourself) on your wedding day?",
 	"What did guests eat at the reception?",
-	"What flavor of cake did you have at your wedding? How many tiers did the cake have?",
+	"What flavor of cake did you have at your wedding?",
 	"What is the best thing that happened on your wedding day?",
 	"Who decided on the wedding song for walking down the aisle?",
 	"What is the worst thing that happened on your wedding day?"
