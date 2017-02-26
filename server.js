@@ -89,7 +89,7 @@ function fillInRoomQuestions(room) {
 		var questionPlayer1 = null;
 		var questionPlayer2 = null;
 
-		if (playerId == 1) {
+		if (playerId == 0) {
 			questionPlayer1 = getNonPlayerSpecificQuestion(question);
 			questionPlayer2 = getPlayerSpecificQuestion(question, player.name);
 		} else {
