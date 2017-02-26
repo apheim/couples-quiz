@@ -174,7 +174,6 @@ io.on('connection', function(socket) {
 			socket.roomCode = room.code;
 			console.log('Player has Joined Room');
 			if (room.numberOfPlayers == 2) {
-				console.log("Starting Game");
 				io.sockets.in(code).emit('startGame');
 			}
 		}
@@ -195,6 +194,18 @@ io.on('connection', function(socket) {
 		}
 	});
 
+  socket.on("playagain", function(){
+    let room = getRoom(socket.roomCode);
+    room.questions = [];
+
+    room.players.forEach(function(p){
+      p.answers = [];
+    });
+
+    fillInRoomQuestions(room);
+    io.sockets.in(socket.roomCode).emit('goToQuestions', socket.roomCode);
+  });
+
 	socket.on('sendAnswers', function(questions) {
 		console.log(questions);
 		let room = getRoom(socket.roomCode);
@@ -212,7 +223,6 @@ io.on('connection', function(socket) {
 				allAnswered = false;
 		});
 
-		console.log(allAnswered);
 		if (allAnswered)
 			io.sockets.in(socket.roomCode).emit('goToAnswers', socket.roomCode);
 	})

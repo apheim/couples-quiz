@@ -1,6 +1,6 @@
 <template>
 <div>
-	<transition name="custom-classes-transition" enter-active-class="animated fadeInRight" mode="out-in"  leave-active-class="animated fadeOutLeft"  >
+	<transition name="custom-classes-transition" enter-active-class="animated fadeInRight">
 		<md-card v-if="!waiting" v-bind:key="currentIndex">
 			<md-card-header>
 				<md-card-header-text>
@@ -56,7 +56,7 @@ export default {
 		}
 	},
 	created: function() {
-		var me = this;
+		let me = this;
 		Axios.get('getQuestions', {
 				params: {
 					room: this.room,
@@ -65,6 +65,7 @@ export default {
 			})
 			.then(function(resp) {
 				me.questions = resp.data;
+				me.focusOnAnswer();
 			})
 	},
 	methods: {
@@ -73,12 +74,17 @@ export default {
 			this.waiting = true;
 		},
 		nextQuestion: function() {
+			let me = this;
 			if (++this.currentIndex == this.questions.length)
 				this.sendAnswers();
 
 			setTimeout(function(){
-				document.getElementById("answer").focus();
-			},2000);
+				me.focusOnAnswer();
+			},1000);
+		},
+		focusOnAnswer: function(){
+			document.getElementById("answer").focus();
+
 		}
 	},
 	computed: {
